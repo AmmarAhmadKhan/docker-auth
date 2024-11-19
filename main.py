@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 DATABASE_URL = "sqlite:///./automaton.db"
-SECRET_KEY = "62977c56bc6949c3a0a4a9ac67a347c60d7204af42ff45c593ff894d54700a76"  
+SECRET_KEY = "" # Omitted to ensure security  
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -77,13 +77,7 @@ def create_access_token(data: dict, expires_delta=None):
 
 
 api_users_db = {
-    "apiuser": {
-        "username": "apiuser",
-        "full_name": "API User",
-        "email": "api@user.com",
-        "hashed_password": get_password_hash("1line@atime"),
-        "disabled": False,
-    }
+   #Omitted to ensure security
 }
 
 class User(BaseModel):
