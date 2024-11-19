@@ -9,10 +9,15 @@ from sqlalchemy.orm import sessionmaker
 import jwt
 import os
 from passlib.context import CryptContext
+import logging
 
-# Configuration
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
 DATABASE_URL = "sqlite:///./automaton.db"
-SECRET_KEY = "omitted for github repo"  
+SECRET_KEY = "62977c56bc6949c3a0a4a9ac67a347c60d7204af42ff45c593ff894d54700a76"  
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -22,7 +27,7 @@ engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
 
@@ -72,7 +77,13 @@ def create_access_token(data: dict, expires_delta=None):
 
 
 api_users_db = {
-
+    "apiuser": {
+        "username": "apiuser",
+        "full_name": "API User",
+        "email": "api@user.com",
+        "hashed_password": get_password_hash("1line@atime"),
+        "disabled": False,
+    }
 }
 
 class User(BaseModel):
@@ -92,9 +103,12 @@ def get_user(db, username: str):
 def authenticate_user(fake_db, username: str, password: str):
     user = get_user(fake_db, username)
     if not user:
+        logger.info(f"User '{username}' not found.")
         return False
     if not verify_password(password, user.hashed_password):
+        logger.info(f"Password verification failed for user '{username}'.")
         return False
+    logger.info(f"User '{username}' authenticated successfully.")
     return user
 
 @app.post("/token")
