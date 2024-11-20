@@ -188,3 +188,14 @@ async def delete_automaton(automaton_id: int, current_user: User = Depends(get_c
     db.delete(automaton)
     db.commit()
     return {"detail": "Automaton deleted"}
+
+
+@app.get("/get_components/phpipam", response_model=List[str])
+async def get_phpipam_components():
+    return list(constants.phpipam_components.keys())
+
+@app.get("/get_components/phpipam/{component}", response_model=List[Dict[str, List[str]]])
+async def get_phpipam_component_params(component: str):
+    if component not in constants.phpipam_components:
+        raise HTTPException(status_code=404, detail="Component not found")
+    return constants.phpipam_components[component]
