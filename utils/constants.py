@@ -36,3 +36,34 @@ phpipam_components = {
         "contact_phone", "contact_mail", "note", "status", "custom_Customer_URN", "custom_Parent_Company", "custom_Primary_Site"
     ]
 }
+
+
+corero_components = {
+    "tenant": [
+        "id", "name", "description", "status", "servicePolicyId", "address", "countryId", "Business_Unit", "Customer_ID"
+    ],
+    "asset_group": [
+        "id", "name"
+    ],
+    "named_asset": [
+        "id", "ip", "name", "assetGroupId"
+    ],
+    "service_policy": [
+        "id", "serviceLevel", "maxMitigation", "description",
+        {
+            "serviceLevelAlertConfig": [
+                "alertTemplateId", "emailAlertsEnabled", "emailAlertTo", "webhookAlertsEnabled", "webhookAlertMspEnabled", "webhookAlertTenantEnabled"
+            ]
+        },
+        {
+            "attackStatusAlertConfig": [
+                "alertTemplateId", "emailAlertsEnabled", "emailAlertTo", "webhookAlertsEnabled", "webhookAlertMspEnabled", "webhookAlertTenantEnabled"
+            ]
+        },
+        {
+            "remoteMitigationAlertConfig": [
+                "alertTemplateId", "emailAlertsEnabled", "emailAlertTo", "webhookAlertsEnabled", "webhookAlertMspEnabled", "webhookAlertTenantEnabled"
+            ]
+        }
+    ]
+}
