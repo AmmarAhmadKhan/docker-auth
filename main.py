@@ -10,7 +10,7 @@ import jwt
 import os
 from passlib.context import CryptContext
 import logging
-from util import constants
+from utils import constants
 
 # Initialize FastAPI
 app = FastAPI()
@@ -30,6 +30,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
+
 # Database Model
 class Automaton(Base):
     __tablename__ = 'automaton'
@@ -42,8 +43,10 @@ class Automaton(Base):
     updated_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(String)
 
+
 # Create the database tables
 Base.metadata.create_all(bind=engine)
+
 
 # Pydantic Models for Input/Output
 class AutomatonCreate(BaseModel):
@@ -52,21 +55,26 @@ class AutomatonCreate(BaseModel):
     node_details: List[dict]
     connection_details: List[dict]
 
+
 class AutomatonResponse(AutomatonCreate):
     id: int
     created_at: datetime
     updated_at: datetime
     created_by: str
 
+
 # Initialize FastAPI
 app = FastAPI()
+
 
 # Utility functions
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
+
 def get_password_hash(password):
     return pwd_context.hash(password)
+
 
 def create_access_token(data: dict, expires_delta=None):
     to_encode = data.copy()
@@ -74,6 +82,7 @@ def create_access_token(data: dict, expires_delta=None):
         to_encode.update({"exp": datetime.utcnow() + expires_delta})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
 
 # Authentication
 api_users_db = {
@@ -86,13 +95,16 @@ class User(BaseModel):
     email: Optional[str] = None
     disabled: Optional[bool] = None
 
+
 class UserInDB(User):
     hashed_password: str
+
 
 def get_user(db, username: str):
     if username in db:
         user_dict = db[username]
         return UserInDB(**user_dict)
+
 
 def authenticate_user(fake_db, username: str, password: str):
     user = get_user(fake_db, username)
@@ -105,6 +117,7 @@ def authenticate_user(fake_db, username: str, password: str):
     logging.info(f"User '{username}' authenticated successfully.")
     return user
 
+
 @app.post("/token")
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = authenticate_user(api_users_db, form_data.username, form_data.password)
@@ -116,6 +129,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         )
     access_token = create_access_token(data={"sub": user.username})
     return {"access_token": access_token, "token_type": "bearer"}
+
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
@@ -135,6 +149,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
     return user
 
+
 # CRUD Operations for Automaton
 @app.post("/automatons/", response_model=AutomatonResponse)
 async def create_automaton(automaton: AutomatonCreate, current_user: User = Depends(get_current_user)):
@@ -145,11 +160,13 @@ async def create_automaton(automaton: AutomatonCreate, current_user: User = Depe
     db.refresh(db_automaton)
     return db_automaton
 
+
 @app.get("/automatons/", response_model=List[AutomatonResponse])
 async def get_automatons(skip: int = 0, limit: int = 10, current_user: User = Depends(get_current_user)):
     db = SessionLocal()
     automatons = db.query(Automaton).offset(skip).limit(limit).all()
     return automatons
+
 
 @app.get("/automatons/{automaton_id}", response_model=AutomatonResponse)
 async def get_automaton(automaton_id: int, current_user: User = Depends(get_current_user)):
@@ -159,8 +176,10 @@ async def get_automaton(automaton_id: int, current_user: User = Depends(get_curr
         raise HTTPException(status_code=404, detail="Automaton not found")
     return automaton
 
+
 @app.put("/automatons/{automaton_id}", response_model=AutomatonResponse)
-async def update_automaton(automaton_id: int, automaton: AutomatonCreate, current_user: User = Depends(get_current_user)):
+async def update_automaton(automaton_id: int, automaton: AutomatonCreate,
+                           current_user: User = Depends(get_current_user)):
     db = SessionLocal()
     db_automaton = db.query(Automaton).filter(Automaton.id == automaton_id).first()
     if db_automaton is None:
@@ -172,6 +191,7 @@ async def update_automaton(automaton_id: int, automaton: AutomatonCreate, curren
     db.refresh(db_automaton)
     return db_automaton
 
+
 @app.delete("/automatons/{automaton_id}")
 async def delete_automaton(automaton_id: int, current_user: User = Depends(get_current_user)):
     db = SessionLocal()
@@ -182,10 +202,12 @@ async def delete_automaton(automaton_id: int, current_user: User = Depends(get_c
     db.commit()
     return {"detail": "Automaton deleted"}
 
+
 # PHPIPAM Integration Endpoints
 @app.get("/get_components/phpipam", response_model=List[str])
 async def get_phpipam_components():
     return list(constants.phpipam_components.keys())
+
 
 @app.get("/get_components/phpipam/{component}", response_model=List[str])
 async def get_phpipam_component_params(component: str):
@@ -193,10 +215,12 @@ async def get_phpipam_component_params(component: str):
         raise HTTPException(status_code=404, detail="Component not found")
     return list(constants.phpipam_components[component])
 
+
 # Corero Integration Endpoints
 @app.get("/get_components/corero", response_model=List[str])
 async def get_corero_components():
     return list(constants.corero_components.keys())
+
 
 @app.get("/get_components/corero/{component}", response_model=List[str])
 async def get_corero_component_params(component: str):
