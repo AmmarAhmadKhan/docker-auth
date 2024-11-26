@@ -1,8 +1,7 @@
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from typing import List, Dict, Optional
 from pydantic import BaseModel
-from typing import List, Optional
 from datetime import datetime
 from sqlalchemy import Column, String, Integer, JSON, DateTime, create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -11,48 +10,47 @@ import jwt
 import os
 from passlib.context import CryptContext
 import logging
-from typing import Dict
 from util import constants
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Initialize FastAPI
+app = FastAPI()
 
-
+# Configuration
 DATABASE_URL = "sqlite:///./automaton.db"
-SECRET_KEY = "" # Omitted to ensure security  
+SECRET_KEY = ""  # Omitted to ensure security 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
-
+# Set up database
 Base = declarative_base()
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-
+# Set up password hashing
 pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
 
-
+# Database Model
 class Automaton(Base):
     __tablename__ = 'automaton'
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     description = Column(String, index=True)
-    node_details = Column(JSON)
-    connection_details = Column(JSON)
+    node_details = Column(JSON, nullable=True)
+    connection_details = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow)
     created_by = Column(String)
 
-
+# Create the database tables
 Base.metadata.create_all(bind=engine)
 
-
+# Pydantic Models for Input/Output
 class AutomatonCreate(BaseModel):
     name: str
     description: Optional[str] = None
-    node_details: dict
-    connection_details: dict
+    node_details: List[dict]
+    connection_details: List[dict]
 
 class AutomatonResponse(AutomatonCreate):
     id: int
@@ -60,17 +58,10 @@ class AutomatonResponse(AutomatonCreate):
     updated_at: datetime
     created_by: str
 
-
+# Initialize FastAPI
 app = FastAPI()
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"], 
-    allow_headers=["*"],  
-)
-
+# Utility functions
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -84,9 +75,9 @@ def create_access_token(data: dict, expires_delta=None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-
+# Authentication
 api_users_db = {
-   #Omitted to ensure security
+    # Omitted to ensure security
 }
 
 class User(BaseModel):
@@ -106,12 +97,12 @@ def get_user(db, username: str):
 def authenticate_user(fake_db, username: str, password: str):
     user = get_user(fake_db, username)
     if not user:
-        logger.info(f"User '{username}' not found.")
+        logging.info(f"User '{username}' not found.")
         return False
     if not verify_password(password, user.hashed_password):
-        logger.info(f"Password verification failed for user '{username}'.")
+        logging.info(f"Password verification failed for user '{username}'.")
         return False
-    logger.info(f"User '{username}' authenticated successfully.")
+    logging.info(f"User '{username}' authenticated successfully.")
     return user
 
 @app.post("/token")
@@ -144,7 +135,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
     return user
 
-
+# CRUD Operations for Automaton
 @app.post("/automatons/", response_model=AutomatonResponse)
 async def create_automaton(automaton: AutomatonCreate, current_user: User = Depends(get_current_user)):
     db = SessionLocal()
@@ -191,13 +182,24 @@ async def delete_automaton(automaton_id: int, current_user: User = Depends(get_c
     db.commit()
     return {"detail": "Automaton deleted"}
 
-
+# PHPIPAM Integration Endpoints
 @app.get("/get_components/phpipam", response_model=List[str])
 async def get_phpipam_components():
     return list(constants.phpipam_components.keys())
 
-@app.get("/get_components/phpipam/{component}", response_model=List[Dict[str, List[str]]])
+@app.get("/get_components/phpipam/{component}", response_model=List[str])
 async def get_phpipam_component_params(component: str):
     if component not in constants.phpipam_components:
         raise HTTPException(status_code=404, detail="Component not found")
-    return constants.phpipam_components[component]
+    return list(constants.phpipam_components[component])
+
+# Corero Integration Endpoints
+@app.get("/get_components/corero", response_model=List[str])
+async def get_corero_components():
+    return list(constants.corero_components.keys())
+
+@app.get("/get_components/corero/{component}", response_model=List[str])
+async def get_corero_component_params(component: str):
+    if component not in constants.corero_components:
+        raise HTTPException(status_code=404, detail="Component not found")
+    return list(constants.corero_components[component])
