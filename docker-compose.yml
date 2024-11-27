@@ -1,9 +1,73 @@
 services:
-  fastapi-app:
-    build: .
+  apibus-apis:
+    container_name: apibus-apis-dash-api
+    restart: always
+    build:
+      context: apibus-apis/
+      dockerfile: Dockerfile
     ports:
       - "8090:8090"
     volumes:
-      - .:/app
+      - ./apibus-apis:/code
     environment:
-      - DATABASE_URL=sqlite:///./automaton.db
+      POSTGRES_HOST: apibus-postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: apibus-db
+    networks:
+      - shared_network
+    depends_on:
+      - apibus-postgres
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  apibus-postgres:
+    container_name: apibus-postgres
+    image: postgres:14.1
+    ports:
+      - 5001:5432
+    volumes:
+      - apibus-postgres-vol:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    networks:
+      - shared_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  apibus-redis:
+    image: "redis:5.0.5-alpine"
+    container_name: apibus-redis
+    ports:
+      - "6397:6379"
+    volumes:
+      - apibus-redis-volume:/data
+    environment:
+      - REDIS_REPLICATION_MODE=master
+      - TZ=UTC
+    networks:
+      - shared_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+
+volumes:
+  apibus-postgres-vol:
+    name: apibus-postgres-vol
+  apibus-redis-volume:
+    name: apibus-redis-volume
+
+networks:
+  shared_network:

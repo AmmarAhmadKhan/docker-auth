@@ -5,3 +5,8 @@ sqlalchemy
 passlib[argon2]
 PyJWT
 python-multipart
+SQLAlchemy-Utils
+fastapi-jwt[authlib]
+psycopg2-binary
+redis
+
