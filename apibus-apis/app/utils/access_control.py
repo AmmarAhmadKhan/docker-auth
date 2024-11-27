@@ -1,4 +1,5 @@
 import logging
+import os
 from datetime import timedelta
 from typing import List
 from fastapi import HTTPException, Depends, Header
@@ -14,7 +15,7 @@ from fastapi_jwt import (
 )
 from redis import Redis
 
-SECRET_KEY = "62977c56bc6949c3a0a4a9ac67a347c60d7204af42ff45c593ff894d54700a76"
+SECRET_KEY = os.getenv("SECRET_KEY")
 ACCESS_TOKEN_EXPIRE_SECONDS = 15 * 60
 REFRESH_TOKEN_EXPIRE_SECONDS = 5 * 24 * 60 * 60  # Number of seconds for refresh token expiry
 

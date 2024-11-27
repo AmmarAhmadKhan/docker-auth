@@ -10,6 +10,7 @@ services:
     volumes:
       - ./apibus-apis:/code
     environment:
+      SECRET_KEY: <SECRET_KEY>
       POSTGRES_HOST: apibus-postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: postgres
