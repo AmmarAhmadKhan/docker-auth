@@ -1,5 +1,7 @@
+import logging
+from ipaddress import IPv4Address
 from typing import List, Optional, Dict
-from pydantic import BaseModel, PositiveInt, validator
+from pydantic import BaseModel, PositiveInt, validator, field_validator
 from datetime import datetime, date
 
 
@@ -18,14 +20,14 @@ class UserResponse(BaseModel):
     mobile: Optional[str]
     password_updated: str
 
-    @validator('password_updated', pre=True, always=True)
-    def isoformat_password_updated(cls, v):
-        if isinstance(v, datetime):
-            return v.isoformat()
-        return v
+    @field_validator('password_updated', mode='before')
+    def isoformat_password_updated(cls, value):
+        if isinstance(value, datetime):
+            return value.isoformat()
+        return value
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserCreate(BaseModel):
@@ -72,6 +74,50 @@ class AutomatonResponse(BaseModel):
     creator: UserResponse
     created_at: datetime
     updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
+class APIConfigCreate(BaseModel):
+    type: str
+    url: str
+    ip: IPv4Address
+    port: str
+    api_key: str
+    api_doc_url: Optional[str]
+    status: str
+
+    @field_validator('ip', mode='after')
+    def convert_ip_to_string(cls, value):
+        return str(value)
+
+    @field_validator('type')
+    def validate_type(cls, value):
+        allowed_types = {'phpipam', 'corero'}
+        if value not in allowed_types:
+            raise ValueError(f"Invalid type: {value}. Allowed values are {allowed_types}.")
+        return value
+
+    @field_validator('status')
+    def validate_status(cls, value):
+        allowed_statuses = {'enable', 'disable', 'suspend'}
+        if value not in allowed_statuses:
+            raise ValueError(f"Invalid status: {value}. Allowed values are {allowed_statuses}.")
+        return value
+
+    class Config:
+        from_attributes = True
+
+
+class APIConfigResponse(BaseModel):
+    type: str
+    url: str
+    ip: str
+    port: str
+    api_key: str
+    api_doc_url: Optional[str]
+    status: str
 
     class Config:
         orm_mode = True

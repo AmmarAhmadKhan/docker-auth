@@ -3,7 +3,6 @@ from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 from sqlalchemy.orm import relationship
 
-
 Base = declarative_base()
 
 
@@ -40,3 +39,20 @@ class Automaton(Base):
     updated_at = Column(DateTime, default=datetime.utcnow)
 
     creator = relationship("User", back_populates="automatons")
+
+
+class APIConfig(Base):
+    __tablename__ = 'api_config'
+
+    id = Column(Integer, primary_key=True, index=True)
+    type = Column(String)
+    url = Column(String, index=True, unique=True)
+    ip = Column(String)
+    port = Column(String)
+    api_key = Column(String)
+    api_doc_url = Column(String)
+    status = Column(String)
+
+    __table_args__ = (
+        UniqueConstraint('ip', 'port', name='unique_ip_port'),
+    )
