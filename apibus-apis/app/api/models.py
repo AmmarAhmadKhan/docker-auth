@@ -101,7 +101,7 @@ class APIConfigCreate(BaseModel):
 
     @field_validator('status')
     def validate_status(cls, value):
-        allowed_statuses = {'enable', 'disable', 'suspend'}
+        allowed_statuses = {'enabled', 'disabled', 'suspended'}
         if value not in allowed_statuses:
             raise ValueError(f"Invalid status: {value}. Allowed values are {allowed_statuses}.")
         return value
