@@ -1,6 +1,6 @@
 services:
   apibus-apis:
-    container_name: apibus-apis-dash-api
+    container_name: apibus-apis
     restart: always
     build:
       context: apibus-apis/
