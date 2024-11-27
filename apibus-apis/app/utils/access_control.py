@@ -55,26 +55,16 @@ def authenticate_user(username: str, password: str):
 
 
 def get_current_user_by_jwt(
-        credentials: JwtAuthorizationCredentials = Security(access_security),
-        authorization: str = Header(None)  # Extract token from the Authorization header
+        credentials: JwtAuthorizationCredentials = Security(access_security)
 ):
     """Dependency for API endpoints to authorize access tokens and retrieve the current user."""
     if not credentials:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     current_user_name = credentials["username"]
+    token_jti = credentials.jti
 
-    # Extract the raw JWT token (the one passed in the Authorization header)
-    if not authorization:
-        raise HTTPException(status_code=400, detail="Access token is required in the Authorization header")
-
-    # Extract access token (Authorization: Bearer <access_token>)
-    try:
-        access_token = authorization.split(" ")[1]  # Assuming "Bearer <token>"
-    except IndexError:
-        raise HTTPException(status_code=400, detail="Invalid Authorization header format")
-
-    if redis_conn.get(access_token):
+    if redis_conn.get(token_jti):
         raise HTTPException(status_code=401, detail="User has already Logged Out")
 
     try:

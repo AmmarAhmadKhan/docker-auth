@@ -63,17 +63,14 @@ def regenerate_access_token(credentials: JwtAuthorizationCredentials = Security(
 
 @router.delete('/logout')
 def logout_and_revoke_tokens(refresh_token: Optional[str] = None,
-                             authorization: Optional[str] = Header(None),
                              credentials: JwtAuthorizationCredentials = Depends(access_security)):
     """Store both access and refresh tokens in Redis with a value of true to indicate revocation. Additionally,
     we set an expiry time on these tokens in Redis, ensuring they are automatically removed after expiration."""
 
     if not credentials:
         raise HTTPException(status_code=401, detail="Unauthorized")
-    if not authorization:
-        raise HTTPException(status_code=400, detail="Access token is required in the Authorization header")
-    access_token = authorization.split(" ")[1]
-    redis_conn.set(access_token, "blacklisted", ex=ACCESS_TOKEN_EXPIRE_SECONDS)
+    access_jti = credentials.jti
+    redis_conn.set(access_jti, "blacklisted", ex=ACCESS_TOKEN_EXPIRE_SECONDS)
     if refresh_token:
         refresh_decoded = refresh_security.decode_jwt(refresh_token)
         refresh_expires_in = refresh_decoded["exp"] - int(datetime.utcnow().timestamp())
