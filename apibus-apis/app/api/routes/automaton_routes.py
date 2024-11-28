@@ -9,6 +9,7 @@ from app.core.database.models import Automaton
 from app.core.database.session import SessionLocal, Session, get_db
 from app.api.models import AutomatonResponse, AutomatonCreate
 from sqlalchemy.orm import joinedload
+from app.utils.sample_data import sample_customer_data
 from sqlalchemy.exc import IntegrityError
 
 router = APIRouter()
@@ -33,6 +34,12 @@ async def create_automaton(automaton: AutomatonCreate,
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/sample_data")
+async def get_sample_data(current_user=Depends(get_current_user_by_jwt)):
+    customer_data = sample_customer_data.get("customers", {}).get("data", [])
+    return customer_data
 
 
 @router.get("", response_model=List[AutomatonResponse])
