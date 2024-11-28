@@ -122,3 +122,19 @@ class APIConfigResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class NormalizerCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    node_details: dict
+
+
+class NormalizerResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str]
+    node_details: Optional[dict]
+
+    class Config:
+        orm_mode = True

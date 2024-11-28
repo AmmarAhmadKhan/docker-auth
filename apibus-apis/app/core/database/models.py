@@ -56,3 +56,12 @@ class APIConfig(Base):
     __table_args__ = (
         UniqueConstraint('ip', 'port', name='unique_ip_port'),
     )
+
+
+class Normalizer(Base):
+    __tablename__ = 'normalizer'
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, index=True, unique=True)
+    description = Column(String, index=True)
+    node_details = Column(JSON, nullable=True)
