@@ -111,6 +111,7 @@ class APIConfigCreate(BaseModel):
 
 
 class APIConfigResponse(BaseModel):
+    id: int
     type: str
     url: str
     ip: str
