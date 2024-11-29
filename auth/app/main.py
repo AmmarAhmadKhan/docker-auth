@@ -29,9 +29,9 @@ def custom_openapi():
         return app.openapi_schema
 
     openapi_schema = get_openapi(
-        title="API BUS - CUSTOM SWAGGER UI",
+        title="FastAPI Auth Service - CUSTOM SWAGGER UI",
         version="1.0.0",
-        description="API BUS Swagger APIs with an Authorize Button",
+        description="FastAPI Auth Service APIs with an Authorize Button",
         routes=app.routes,
     )
 

@@ -16,10 +16,11 @@ from fastapi_jwt import (
 from redis import Redis
 
 SECRET_KEY = os.getenv("SECRET_KEY")
+REDIS_HOST = os.getenv("REDIS_HOST")
 ACCESS_TOKEN_EXPIRE_SECONDS = 15 * 60
 REFRESH_TOKEN_EXPIRE_SECONDS = 5 * 24 * 60 * 60  # Number of seconds for refresh token expiry
 
-redis_conn = Redis(host="apibus-redis", port=6379, decode_responses=True)
+redis_conn = Redis(host=REDIS_HOST, port=6379, decode_responses=True)
 
 access_security = JwtAccessBearerCookie(
     secret_key=SECRET_KEY,

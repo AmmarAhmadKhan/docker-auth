@@ -1,6 +1,6 @@
-# FastAPI Automaton API
+# FastAPI Auth APIs
 
-A backend for API bus UI, this is a work in process so the structure is not yet finalized. 
+A backend for Auth Service
 
 ## Running the Application with Docker Compose
 
@@ -20,6 +20,6 @@ A backend for API bus UI, this is a work in process so the structure is not yet 
    ```
 
 ## Notes
-- The API runs on port `8090`.
+- The API runs on port `8000`.
 - Authentication is handled using JWT tokens.
 - Docker Compose is used to manage services and environments.

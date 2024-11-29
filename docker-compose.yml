@@ -1,38 +1,39 @@
 services:
-  apibus-apis:
-    container_name: apibus-apis
+  auth:
+    container_name: auth
     restart: always
     build:
-      context: apibus-apis/
+      context: auth/
       dockerfile: Dockerfile
     ports:
-      - "8090:8090"
+      - "8003:8000"
     volumes:
-      - ./apibus-apis:/code
+      - ./auth:/code
     environment:
       SECRET_KEY: <SECRET_KEY>
-      POSTGRES_HOST: apibus-postgres
+      POSTGRES_HOST: auth-postgres
       POSTGRES_PORT: 5432
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: apibus-db
+      POSTGRES_DB: auth-db
+      REDIS_HOST: auth-redis
     networks:
       - shared_network
     depends_on:
-      - apibus-postgres
+      - auth-postgres
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
 
-  apibus-postgres:
-    container_name: apibus-postgres
+  auth-postgres:
+    container_name: auth-postgres
     image: postgres:14.1
     ports:
-      - 5001:5432
+      - 5454:5432
     volumes:
-      - apibus-postgres-vol:/var/lib/postgresql/data
+      - auth-postgres-vol:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -45,13 +46,13 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  apibus-redis:
+  auth-redis:
     image: "redis:5.0.5-alpine"
-    container_name: apibus-redis
+    container_name: auth-redis
     ports:
-      - "6397:6379"
+      - "6380:6379"
     volumes:
-      - apibus-redis-volume:/data
+      - auth-redis-volume:/data
     environment:
       - REDIS_REPLICATION_MODE=master
       - TZ=UTC
@@ -65,10 +66,10 @@ services:
 
 
 volumes:
-  apibus-postgres-vol:
-    name: apibus-postgres-vol
-  apibus-redis-volume:
-    name: apibus-redis-volume
+  auth-postgres-vol:
+    name: auth-postgres-vol
+  auth-redis-volume:
+    name: auth-redis-volume
 
 networks:
   shared_network:
